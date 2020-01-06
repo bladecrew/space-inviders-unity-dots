@@ -1,45 +1,56 @@
+using System.Collections.Generic;
 using Data;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Jobs;
 using Unity.Rendering;
 
 namespace Systems
 {
-    public class HealthSystem : JobComponentSystem
+    public class HealthSystem : ComponentSystem
     {
-        private EntityQuery _healthComponents;
-        private EntityCommandBufferSystem _bufferSystem;
+        private EntityQuery _healthSharedQuery;
 
         protected override void OnCreate()
         {
             var healthQuery = new EntityQueryDesc
             {
-                All = new ComponentType[] {typeof(HealthSharedData), typeof(HealthData)}
+                All = new ComponentType[] {typeof(HealthComponent), typeof(InputComponent)}
             };
 
-            _healthComponents = GetEntityQuery(healthQuery);
-            _bufferSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
+            _healthSharedQuery = GetEntityQuery(healthQuery);
         }
 
-        protected override JobHandle OnUpdate(JobHandle inputDeps)
+        protected override void OnUpdate()
         {
-            return inputDeps;
-            
-            Entities
-                .WithoutBurst()
-                .WithStoreEntityQueryInField(ref _healthComponents)
-                .ForEach((Entity entity, HealthSharedData healthSharedData, ref HealthData healthData) =>
-                {
-                    var bufferCommand = _bufferSystem.CreateCommandBuffer();
-                    bufferCommand.SetSharedComponent(entity, new RenderMesh
-                    {
-                        mesh = healthSharedData.Mesh,
-                        material = healthSharedData.MaterialByHealthData(healthData)
-                    });
-                }).Run();
+            var healthComponents = _healthSharedQuery.ToComponentDataArray<HealthComponent>(Allocator.TempJob);
+            var entities = _healthSharedQuery.ToEntityArray(Allocator.TempJob);
+            var healthSharedComponents = new List<HealthSharedComponent>();
+            EntityManager.GetAllUniqueSharedComponentData(healthSharedComponents);
 
-            return inputDeps;
+
+            healthSharedComponents.RemoveAll(c => c.IsNull);
+
+            for (var i = 0; i < healthSharedComponents.Count; i++)
+            {
+                var healthComponent = healthComponents[i];
+                var healthSharedComponent = healthSharedComponents[i];
+
+                if (healthComponent.Health == healthSharedComponent.CurrentHp)
+                    continue;
+
+                healthSharedComponent.CurrentHp = healthComponent.Health;
+
+                var entity = entities[i];
+
+                EntityManager.SetSharedComponentData(entity, new RenderMesh
+                {
+                    material = healthSharedComponent.MaterialByHp(),
+                    mesh = healthSharedComponent.Mesh
+                });
+            }
+
+            healthComponents.Dispose();
+            entities.Dispose();
         }
     }
 }

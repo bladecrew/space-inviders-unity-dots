@@ -13,19 +13,19 @@ namespace Systems
     public class PlayerMovementSystem : JobComponentSystem
     {
         [BurstCompile]
-        private struct PlayerMovementJob : IJobForEach<Translation, InputData, MovementData>
+        private struct PlayerMovementJob : IJobForEach<Translation, InputComponent, MovementComponent>
         {
             public float DeltaTime;
             public Bounds Bounds;
 
-            public void Execute(ref Translation translation, ref InputData inputData,ref MovementData movementData)
+            public void Execute(ref Translation translation, ref InputComponent inputComponent,ref MovementComponent movementComponent)
             {
                 if (translation.Value.x < Bounds.min.x)
                     translation.Value.x = Bounds.max.x;
                 else if (translation.Value.x > Bounds.max.x)
                     translation.Value.x = Bounds.min.x;
                 else
-                    translation.Value.x += inputData.InputX * movementData.MoveSpeed * DeltaTime;
+                    translation.Value.x += inputComponent.InputX * movementComponent.MoveSpeed * DeltaTime;
             }
         }
 

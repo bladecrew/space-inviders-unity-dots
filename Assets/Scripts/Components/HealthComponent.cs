@@ -2,7 +2,7 @@ using Unity.Entities;
 
 namespace Data
 {
-    public struct HealthData : IComponentData
+    public struct HealthComponent : IComponentData
     {
         public int Health;
     }

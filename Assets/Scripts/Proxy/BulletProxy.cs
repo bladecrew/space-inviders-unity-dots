@@ -17,7 +17,7 @@ namespace Proxy
 
         private void _AddBulletData(Entity entity, EntityManager dstManager)
         {
-            var data = new BulletData
+            var data = new BulletComponent
             {
                 MovementSpeed = movementSpeed,
                 IsEnemyBullet = isEnemyBullet

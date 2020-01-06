@@ -15,7 +15,7 @@ namespace Systems
 
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref LocalToWorld position, ref ShootingData shootingData, ref EnemyData enemyData) =>
+            Entities.ForEach((ref LocalToWorld position, ref ShootingComponent shootingData, ref EnemyComponent enemyData) =>
             {
                 var shootingPeriod = enemyData.ShootingPeriodDynamic + Time.DeltaTime;
                 if (shootingPeriod < enemyData.ShootingPeriod)

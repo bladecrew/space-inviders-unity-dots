@@ -2,7 +2,7 @@
 
 namespace Data
 {
-    public struct InputData : IComponentData
+    public struct InputComponent : IComponentData
     {
         public bool IsShooting;
         public float InputX;

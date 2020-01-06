@@ -763,9 +763,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5faaa59937b849ff9896c5ca24c9d55e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  threeHpMaterial: {fileID: 0}
-  twoHpMaterial: {fileID: 0}
-  oneHpMaterial: {fileID: 0}
+  threeHpMaterial: {fileID: 2100000, guid: c5693e51680fdba43bc273fdd1151d9c, type: 2}
+  twoHpMaterial: {fileID: 2100000, guid: f549a3ee03bdd894f940cf256aa5e501, type: 2}
+  oneHpMaterial: {fileID: 2100000, guid: 3b60bf731494ed54ab59423e09002c3d, type: 2}
   bulletPrefab: {fileID: 5489245695296827418, guid: 78ab60e5ed023e74eb9809eb7e74c99f,
     type: 3}
   moveSpeed: 10

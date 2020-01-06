@@ -36,7 +36,7 @@ namespace Proxy
 
         private void _PlayerMovementData(Entity entity, EntityManager dstManager)
         {
-            var movementData = new MovementData
+            var movementData = new MovementComponent
             {
                 MoveSpeed = moveSpeed
             };
@@ -46,7 +46,7 @@ namespace Proxy
 
         private void _AddHealthData(Entity entity, EntityManager dstManager)
         {
-            var healthData = new HealthData
+            var healthData = new HealthComponent
             {
                 Health = health
             };
@@ -57,12 +57,13 @@ namespace Proxy
 
         private void _AddSharedHealthData(Entity entity, EntityManager dstManager)
         {
-            dstManager.SetSharedComponentData(entity, new HealthSharedData
+            dstManager.AddSharedComponentData(entity, new HealthSharedComponent
             {
                 OneHpMaterial = oneHpMaterial,
                 TwoHpMaterial = twoHpMaterial,
                 ThreeHpMaterial = threeHpMaterial,
-                Mesh = GetComponent<Mesh>()
+                Mesh = GetComponent<MeshFilter>().mesh,
+                CurrentHp = 3
             });
         }
 
@@ -82,7 +83,7 @@ namespace Proxy
         private void _AddShootingData(Entity entity, EntityManager dstManager,
             GameObjectConversionSystem conversionSystem)
         {
-            var shootingData = new ShootingData
+            var shootingData = new ShootingComponent
             {
                 Bullet = conversionSystem.GetPrimaryEntity(bulletPrefab)
             };
@@ -92,7 +93,7 @@ namespace Proxy
 
         private void _AddInputData(Entity entity, EntityManager dstManager)
         {
-            dstManager.AddComponent(entity, typeof(InputData));
+            dstManager.AddComponent(entity, typeof(InputComponent));
         }
     }
 }

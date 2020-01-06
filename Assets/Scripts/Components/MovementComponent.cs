@@ -3,7 +3,7 @@
  namespace Data
  {
      [GenerateAuthoringComponent]
-     public struct MovementData : IComponentData
+     public struct MovementComponent : IComponentData
      {
          public float MoveSpeed;
      }

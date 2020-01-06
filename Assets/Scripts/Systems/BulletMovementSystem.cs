@@ -8,7 +8,7 @@ namespace Systems
     {
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref Translation translation, ref BulletData bulletData) =>
+            Entities.ForEach((ref Translation translation, ref BulletComponent bulletData) =>
             {
                 translation.Value.y += bulletData.IsEnemyBullet
                     ? -Time.DeltaTime * bulletData.MovementSpeed

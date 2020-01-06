@@ -2,7 +2,7 @@ using Unity.Entities;
 
 namespace Data
 {
-    public struct EnemyData : IComponentData
+    public struct EnemyComponent : IComponentData
     {
         public EnemyMovementDirection CurrentDirection;
         public float LineChangingTime;

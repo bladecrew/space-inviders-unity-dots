@@ -20,14 +20,14 @@ namespace Systems
 
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref GameData gameData) =>
+            Entities.ForEach((ref GameComponent gameData) =>
             {
                 if (gameData.IsPaused)
                     return;
 
                 var components = GetEntityQuery(new EntityQueryDesc
                 {
-                    All = new ComponentType[] {typeof(EnemyData)}
+                    All = new ComponentType[] {typeof(EnemyComponent)}
                 });
 
                 var entityCounts = components.CalculateEntityCount();
@@ -61,11 +61,11 @@ namespace Systems
             });
         }
 
-        private static void _CreateEnemies(GameData gameData, EntityCommandBuffer commandBuffer)
+        private static void _CreateEnemies(GameComponent gameComponent, EntityCommandBuffer commandBuffer)
         {
-            for (var index = 0; index < gameData.CurrentEnemies; index++)
+            for (var index = 0; index < gameComponent.CurrentEnemies; index++)
             {
-                var enemyData = new EnemyData
+                var enemyData = new EnemyComponent
                 {
                     CurrentDirection = Maths.Roll()
                         ? EnemyMovementDirection.Left
@@ -97,7 +97,7 @@ namespace Systems
 
                 enemyData.ShootingPeriod = 2f;
 
-                var entity = commandBuffer.Instantiate(gameData.Enemy);
+                var entity = commandBuffer.Instantiate(gameComponent.Enemy);
                 commandBuffer.SetComponent(entity, enemyData);
 
                 _SetPosition(entity, commandBuffer);

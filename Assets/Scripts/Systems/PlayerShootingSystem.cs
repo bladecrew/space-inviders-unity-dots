@@ -15,8 +15,8 @@ namespace Systems
 
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref ShootingData shootingData, ref LocalToWorld position,
-                ref InputData playerInput) =>
+            Entities.ForEach((ref ShootingComponent shootingData, ref LocalToWorld position,
+                ref InputComponent playerInput) =>
             {
                 if (!playerInput.IsShooting)
                     return;

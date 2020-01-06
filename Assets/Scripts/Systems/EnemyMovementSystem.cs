@@ -14,39 +14,39 @@ namespace Systems
     public class EnemyMovementSystem : JobComponentSystem
     {
         [BurstCompile]
-        private struct EnemyMovementJob : IJobForEach<Translation, MovementData, EnemyData>
+        private struct EnemyMovementJob : IJobForEach<Translation, MovementComponent, EnemyComponent>
         {
             [ReadOnly] public float DeltaTime;
             [ReadOnly] public Bounds Bounds;    
             
-            public void Execute(ref Translation translation, ref MovementData movementData, ref EnemyData enemyData)
+            public void Execute(ref Translation translation, ref MovementComponent movementComponent, ref EnemyComponent enemyComponent)
             {
-                var movementDirection = _MovementDirection(ref enemyData, ref translation);
-                translation.Value.x += movementDirection.x * movementData.MoveSpeed;
-                translation.Value.y += movementDirection.y * movementData.MoveSpeed;
+                var movementDirection = _MovementDirection(ref enemyComponent, ref translation);
+                translation.Value.x += movementDirection.x * movementComponent.MoveSpeed;
+                translation.Value.y += movementDirection.y * movementComponent.MoveSpeed;
             }
 
-            private Vector2 _MovementDirection(ref EnemyData enemyData, ref Translation translation)
+            private Vector2 _MovementDirection(ref EnemyComponent enemyComponent, ref Translation translation)
             {
-                var lineChangingTime = enemyData.LineChangingTimeDynamic + DeltaTime;
-                if (lineChangingTime >= enemyData.LineChangingTime)
+                var lineChangingTime = enemyComponent.LineChangingTimeDynamic + DeltaTime;
+                if (lineChangingTime >= enemyComponent.LineChangingTime)
                 {
-                    enemyData.LineChangingTimeDynamic = 0;
+                    enemyComponent.LineChangingTimeDynamic = 0;
 
-                    enemyData.CurrentDirection = enemyData.CurrentDirection == EnemyMovementDirection.Right
+                    enemyComponent.CurrentDirection = enemyComponent.CurrentDirection == EnemyMovementDirection.Right
                         ? EnemyMovementDirection.Left
                         : EnemyMovementDirection.Right;
                 }
 
-                switch (enemyData.CurrentDirection)
+                switch (enemyComponent.CurrentDirection)
                 {
                     case EnemyMovementDirection.Right when translation.Value.x >= Bounds.max.x:
                     case EnemyMovementDirection.Left when translation.Value.x <= Bounds.min.x:
-                        enemyData.LineChangingTimeDynamic = lineChangingTime;
+                        enemyComponent.LineChangingTimeDynamic = lineChangingTime;
 
-                        if (enemyData.IsNonStop)
+                        if (enemyComponent.IsNonStop)
                         {
-                            enemyData.CurrentDirection = enemyData.CurrentDirection == EnemyMovementDirection.Right
+                            enemyComponent.CurrentDirection = enemyComponent.CurrentDirection == EnemyMovementDirection.Right
                                 ? EnemyMovementDirection.Left
                                 : EnemyMovementDirection.Right;
                         }
@@ -55,11 +55,11 @@ namespace Systems
 
                     case EnemyMovementDirection.Left:
                         return new Vector2(-DeltaTime, -DeltaTime)
-                            .CalculateFromDegree(enemyData.SerpentineDegree);
+                            .CalculateFromDegree(enemyComponent.SerpentineDegree);
 
                     case EnemyMovementDirection.Right:
                         return new Vector2(DeltaTime, -DeltaTime)
-                            .CalculateFromDegree(enemyData.SerpentineDegree);
+                            .CalculateFromDegree(enemyComponent.SerpentineDegree);
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

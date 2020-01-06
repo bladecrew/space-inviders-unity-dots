@@ -16,7 +16,7 @@ namespace Proxy
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
-            var enemyData = new EnemyData();
+            var enemyData = new EnemyComponent();
 
             dstManager.AddComponentData(entity, enemyData);
 
@@ -35,7 +35,7 @@ namespace Proxy
         private void _AddShootingData(Entity entity, EntityManager dstManager,
             GameObjectConversionSystem conversionSystem)
         {
-            var shootingData = new ShootingData
+            var shootingData = new ShootingComponent
             {
                 Bullet = conversionSystem.GetPrimaryEntity(bulletPrefab)
             };
@@ -57,7 +57,7 @@ namespace Proxy
 
         private void _AddMovementData(Entity entity, EntityManager dstManager)
         {
-            var movementData = new MovementData
+            var movementData = new MovementComponent
             {
                 MoveSpeed = moveSpeed
             };

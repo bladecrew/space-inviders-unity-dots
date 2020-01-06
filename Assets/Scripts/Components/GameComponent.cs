@@ -2,7 +2,7 @@ using Unity.Entities;
 
 namespace Data
 {
-    public struct GameData : IComponentData
+    public struct GameComponent : IComponentData
     {
         private State _prePauseState;
         private bool _isPaused;

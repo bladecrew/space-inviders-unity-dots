@@ -10,15 +10,15 @@ namespace Systems
     public class PlayerInputSystem : JobComponentSystem
     {
         [BurstCompile]
-        private struct PlayerInputJob : IJobForEach<InputData>
+        private struct PlayerInputJob : IJobForEach<InputComponent>
         {
             [ReadOnly] public float InputX;
             [ReadOnly] public bool IsShooting;
             
-            public void Execute(ref InputData inputData)
+            public void Execute(ref InputComponent inputComponent)
             {
-                inputData.InputX = InputX;
-                inputData.IsShooting = IsShooting;
+                inputComponent.InputX = InputX;
+                inputComponent.IsShooting = IsShooting;
             }
         }
 

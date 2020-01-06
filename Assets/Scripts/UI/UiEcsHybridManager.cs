@@ -34,7 +34,7 @@ namespace UI
             if (_gameDataEntity == Entity.Null || _playerDataEntity == Entity.Null)
                 _InitializeEntities();
 
-            var healthData = _entityManager.GetComponentData<HealthData>(_playerDataEntity);
+            var healthData = _entityManager.GetComponentData<HealthComponent>(_playerDataEntity);
 
             if (_state != GameState.Menu && _state != GameState.Dead && Input.GetKeyDown(KeyCode.Escape))
                 _SwitchState(_state == GameState.Paused ? GameState.Play : GameState.Paused);
@@ -88,13 +88,13 @@ namespace UI
 
         private void _ResetData()
         {
-            var healthData = _entityManager.GetComponentData<HealthData>(_playerDataEntity);
+            var healthData = _entityManager.GetComponentData<HealthComponent>(_playerDataEntity);
 
             healthData.Health = 3;
 
             _entityManager.SetComponentData(_playerDataEntity, healthData);
 
-            var gameData = _entityManager.GetComponentData<GameData>(_gameDataEntity);
+            var gameData = _entityManager.GetComponentData<GameComponent>(_gameDataEntity);
 
             gameData.CurrentEnemies = 0;
 
@@ -107,8 +107,8 @@ namespace UI
             var entities = _entityManager.GetAllEntities();
             var gameSystem = World.Active.GetExistingSystem(typeof(GameSystem));
             var inputSystem = World.Active.GetExistingSystem(typeof(PlayerInputSystem));
-            var gameSystemComponentData = gameSystem.GetComponentDataFromEntity<GameData>();
-            var inputComponentData = inputSystem.GetComponentDataFromEntity<InputData>();
+            var gameSystemComponentData = gameSystem.GetComponentDataFromEntity<GameComponent>();
+            var inputComponentData = inputSystem.GetComponentDataFromEntity<InputComponent>();
 
             foreach (var entity in entities)
             {

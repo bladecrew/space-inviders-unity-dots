@@ -23,21 +23,21 @@ namespace Systems
 
             var enemyQuery = new EntityQueryDesc
             {
-                None = new ComponentType[] {typeof(InputData)},
-                All = new ComponentType[] {typeof(Translation), typeof(EnemyData)}
+                None = new ComponentType[] {typeof(InputComponent)},
+                All = new ComponentType[] {typeof(Translation), typeof(EnemyComponent)}
             };
             _enemiesComponents = GetEntityQuery(enemyQuery);
 
             var bulletQuery = new EntityQueryDesc
             {
-                None = new ComponentType[] {typeof(InputData)},
-                All = new ComponentType[] {typeof(Translation), typeof(BulletData)}
+                None = new ComponentType[] {typeof(InputComponent)},
+                All = new ComponentType[] {typeof(Translation), typeof(BulletComponent)}
             };
             _bulletComponents = GetEntityQuery(bulletQuery);
 
             var healthQuery = new EntityQueryDesc
             {
-                All = new ComponentType[] {typeof(Translation), typeof(HealthData)}
+                All = new ComponentType[] {typeof(Translation), typeof(HealthComponent)}
             };
             _healthComponents = GetEntityQuery(healthQuery);
         }
@@ -50,8 +50,8 @@ namespace Systems
             [ReadOnly] public NativeArray<Translation> EnemiesTranslations;
             [ReadOnly] public NativeArray<Translation> BulletTranslation;
             [ReadOnly] public NativeArray<Translation> HealthTranslation;
-            [ReadOnly] public NativeArray<HealthData> HealthDatas;
-            [ReadOnly] public NativeArray<BulletData> BulletDatas;
+            [ReadOnly] public NativeArray<HealthComponent> HealthDatas;
+            [ReadOnly] public NativeArray<BulletComponent> BulletDatas;
             [ReadOnly] public NativeArray<Entity> EnemiesEntities;
             [ReadOnly] public NativeArray<Entity> BulletsEntities;
             [ReadOnly] public NativeArray<Entity> HealthEntities;
@@ -84,7 +84,7 @@ namespace Systems
                                     var healthEntity = HealthEntities[healthDataIndex];
 
                                     BufferCommand.SetComponent(i, healthEntity,
-                                        new HealthData {Health = --healthData.Health});
+                                        new HealthComponent {Health = --healthData.Health});
                                 }
                                 else
                                 {
@@ -98,7 +98,7 @@ namespace Systems
 
                                     needDestroyBullet = true;
                                     BufferCommand.SetComponent(i, healthEntity,
-                                        new HealthData {Health = --healthData.Health});
+                                        new HealthComponent {Health = --healthData.Health});
                                 }
                             }
                         }
@@ -130,7 +130,7 @@ namespace Systems
                             var healthEntity = HealthEntities[healthDataIndex];
 
                             BufferCommand.SetComponent(i, healthEntity,
-                                new HealthData {Health = --healthData.Health});
+                                new HealthComponent {Health = --healthData.Health});
                         }
                     }
 
@@ -145,8 +145,8 @@ namespace Systems
             var enemiesTranslation = _enemiesComponents.ToComponentDataArray<Translation>(Allocator.TempJob);
             var bulletTranslation = _bulletComponents.ToComponentDataArray<Translation>(Allocator.TempJob);
             var healthTranslation = _healthComponents.ToComponentDataArray<Translation>(Allocator.TempJob);
-            var bulletDatas = _bulletComponents.ToComponentDataArray<BulletData>(Allocator.TempJob);
-            var healthDatas = _healthComponents.ToComponentDataArray<HealthData>(Allocator.TempJob);
+            var bulletDatas = _bulletComponents.ToComponentDataArray<BulletComponent>(Allocator.TempJob);
+            var healthDatas = _healthComponents.ToComponentDataArray<HealthComponent>(Allocator.TempJob);
             var enemiesEntities = _enemiesComponents.ToEntityArray(Allocator.TempJob);
             var bulletsEntities = _bulletComponents.ToEntityArray(Allocator.TempJob);
             var healthEntities = _healthComponents.ToEntityArray(Allocator.TempJob);

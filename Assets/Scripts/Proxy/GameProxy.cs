@@ -18,7 +18,7 @@ namespace Proxy
 
         private void _AddGameData(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
-            var gameData = new GameData
+            var gameData = new GameComponent
             {
                 Enemy = conversionSystem.GetPrimaryEntity(enemyGameObject),
                 CurrentEnemies = 1,
