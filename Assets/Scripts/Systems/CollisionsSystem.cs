@@ -1,5 +1,5 @@
 using System;
-using Data;
+using Components;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -50,8 +50,8 @@ namespace Systems
             [ReadOnly] public NativeArray<Translation> EnemiesTranslations;
             [ReadOnly] public NativeArray<Translation> BulletTranslation;
             [ReadOnly] public NativeArray<Translation> HealthTranslation;
-            [ReadOnly] public NativeArray<HealthComponent> HealthDatas;
-            [ReadOnly] public NativeArray<BulletComponent> BulletDatas;
+            [ReadOnly] public NativeArray<HealthComponent> HealthComponents;
+            [ReadOnly] public NativeArray<BulletComponent> BulletComponents;
             [ReadOnly] public NativeArray<Entity> EnemiesEntities;
             [ReadOnly] public NativeArray<Entity> BulletsEntities;
             [ReadOnly] public NativeArray<Entity> HealthEntities;
@@ -66,44 +66,45 @@ namespace Systems
                 for (var bulletIndex = i; bulletIndex < BulletTranslation.Length; bulletIndex++)
                 {
                     var bulletTranslation = BulletTranslation[bulletIndex];
-                    var bulletData = BulletDatas[bulletIndex];
-                    var needDestroyBullet = bulletTranslation.Value.y > Bounds.max.y;
+                    var bulletComponent = BulletComponents[bulletIndex];
+                    var needDestroyBullet = bulletTranslation.Value.y > Bounds.max.y ||
+                                            bulletTranslation.Value.y < Bounds.min.y;
 
                     for (var enemyIndex = i; enemyIndex < EnemiesTranslations.Length; enemyIndex++)
                     {
                         var enemyTranslation = EnemiesTranslations[enemyIndex];
                         var needDestroyEnemy = enemyTranslation.Value.y <= Bounds.min.y + 1f;
 
-                        if (needDestroyEnemy || bulletData.IsEnemyBullet)
+                        if (needDestroyEnemy || bulletComponent.IsEnemyBullet)
                         {
-                            for (var healthDataIndex = 0; healthDataIndex < HealthDatas.Length; healthDataIndex++)
+                            for (var healthComponentIndex = 0; healthComponentIndex < HealthComponents.Length; healthComponentIndex++)
                             {
                                 if (needDestroyEnemy)
                                 {
-                                    var healthData = HealthDatas[healthDataIndex];
-                                    var healthEntity = HealthEntities[healthDataIndex];
+                                    var healthComponent = HealthComponents[healthComponentIndex];
+                                    var healthEntity = HealthEntities[healthComponentIndex];
 
                                     BufferCommand.SetComponent(i, healthEntity,
-                                        new HealthComponent {Health = --healthData.Health});
+                                        new HealthComponent {Health = --healthComponent.Health});
                                 }
                                 else
                                 {
-                                    var healthTranslation = HealthTranslation[healthDataIndex];
-                                    
+                                    var healthTranslation = HealthTranslation[healthComponentIndex];
+
                                     if (!Maths.Intersect(healthTranslation, bulletTranslation))
                                         continue;
 
-                                    var healthData = HealthDatas[healthDataIndex];
-                                    var healthEntity = HealthEntities[healthDataIndex];
+                                    var healthComponent = HealthComponents[healthComponentIndex];
+                                    var healthEntity = HealthEntities[healthComponentIndex];
 
                                     needDestroyBullet = true;
                                     BufferCommand.SetComponent(i, healthEntity,
-                                        new HealthComponent {Health = --healthData.Health});
+                                        new HealthComponent {Health = --healthComponent.Health});
                                 }
                             }
                         }
 
-                        if (!bulletData.IsEnemyBullet && Maths.Intersect(bulletTranslation, enemyTranslation))
+                        if (!bulletComponent.IsEnemyBullet && Maths.Intersect(bulletTranslation, enemyTranslation))
                             needDestroyBullet = needDestroyEnemy = true;
 
                         if (needDestroyEnemy)
@@ -124,13 +125,13 @@ namespace Systems
 
                     if (needDestroyEnemy)
                     {
-                        for (var healthDataIndex = 0; healthDataIndex < HealthDatas.Length; healthDataIndex++)
+                        for (var healthComponentIndex = 0; healthComponentIndex < HealthComponents.Length; healthComponentIndex++)
                         {
-                            var healthData = HealthDatas[healthDataIndex];
-                            var healthEntity = HealthEntities[healthDataIndex];
+                            var healthComponent = HealthComponents[healthComponentIndex];
+                            var healthEntity = HealthEntities[healthComponentIndex];
 
                             BufferCommand.SetComponent(i, healthEntity,
-                                new HealthComponent {Health = --healthData.Health});
+                                new HealthComponent {Health = --healthComponent.Health});
                         }
                     }
 
@@ -145,8 +146,8 @@ namespace Systems
             var enemiesTranslation = _enemiesComponents.ToComponentDataArray<Translation>(Allocator.TempJob);
             var bulletTranslation = _bulletComponents.ToComponentDataArray<Translation>(Allocator.TempJob);
             var healthTranslation = _healthComponents.ToComponentDataArray<Translation>(Allocator.TempJob);
-            var bulletDatas = _bulletComponents.ToComponentDataArray<BulletComponent>(Allocator.TempJob);
-            var healthDatas = _healthComponents.ToComponentDataArray<HealthComponent>(Allocator.TempJob);
+            var bulletComponents = _bulletComponents.ToComponentDataArray<BulletComponent>(Allocator.TempJob);
+            var healthComponents = _healthComponents.ToComponentDataArray<HealthComponent>(Allocator.TempJob);
             var enemiesEntities = _enemiesComponents.ToEntityArray(Allocator.TempJob);
             var bulletsEntities = _bulletComponents.ToEntityArray(Allocator.TempJob);
             var healthEntities = _healthComponents.ToEntityArray(Allocator.TempJob);
@@ -157,8 +158,8 @@ namespace Systems
                 EnemiesTranslations = enemiesTranslation,
                 BulletTranslation = bulletTranslation,
                 HealthTranslation = healthTranslation,
-                HealthDatas = healthDatas,
-                BulletDatas = bulletDatas,
+                HealthComponents = healthComponents,
+                BulletComponents = bulletComponents,
                 EnemiesEntities = enemiesEntities,
                 BulletsEntities = bulletsEntities,
                 HealthEntities = healthEntities,
@@ -172,8 +173,8 @@ namespace Systems
             enemiesTranslation.Dispose();
             bulletTranslation.Dispose();
             healthTranslation.Dispose();
-            healthDatas.Dispose();
-            bulletDatas.Dispose();
+            healthComponents.Dispose();
+            bulletComponents.Dispose();
             enemiesEntities.Dispose();
             bulletsEntities.Dispose();
             healthEntities.Dispose();

@@ -1,4 +1,4 @@
-using Data;
+using Components;
 using Unity.Entities;
 using Unity.Transforms;
 
@@ -15,14 +15,14 @@ namespace Systems
 
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref ShootingComponent shootingData, ref LocalToWorld position,
+            Entities.ForEach((ref ShootingComponent shootingComponent, ref LocalToWorld position,
                 ref InputComponent playerInput) =>
             {
                 if (!playerInput.IsShooting)
                     return;
 
                 var commandBuffer = _bufferSystem.CreateCommandBuffer();
-                var entity = commandBuffer.Instantiate(shootingData.Bullet);
+                var entity = commandBuffer.Instantiate(shootingComponent.Bullet);
                 var localToWorld = new Translation
                 {
                     Value = position.Position

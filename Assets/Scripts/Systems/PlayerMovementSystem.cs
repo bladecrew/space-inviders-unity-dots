@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel;
-using Data;
+using Components;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Jobs;

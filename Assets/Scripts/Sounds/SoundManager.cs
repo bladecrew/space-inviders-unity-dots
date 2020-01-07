@@ -14,7 +14,6 @@ namespace Sounds
 
         public GameState State
         {
-            get => _state;
             set
             {
                 if (value == _state)

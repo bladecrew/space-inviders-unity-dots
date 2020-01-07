@@ -1,5 +1,7 @@
-﻿using Systems;
-using Data;
+﻿using System;
+using System.Collections.Generic;
+using Systems;
+using Components;
 using Sounds;
 using Unity.Entities;
 using UnityEngine;
@@ -7,12 +9,22 @@ using UnityEngine.Rendering.PostProcessing;
 
 namespace UI
 {
-    public class UiEcsHybridManager : MonoBehaviour
+    public class EcsBehaviourHybridManager : MonoBehaviour
     {
         public GameObject pausedPanel;
         public GameObject deadPanel;
         public GameObject menuPanel;
         public PostProcessVolume postProcessVolume;
+
+        private HashSet<Type> _systemTypes = new HashSet<Type>
+        {
+            typeof(BulletMovementSystem),
+            typeof(CollisionsSystem),
+            typeof(EnemyMovementSystem),
+            typeof(EnemyShootingSystem),
+            typeof(PlayerMovementSystem),
+            typeof(PlayerShootingSystem)
+        };
 
         private CollisionsSystem _collisionsSystem;
         private Entity _gameDataEntity;
@@ -126,7 +138,7 @@ namespace UI
         {
             foreach (var componentSystemBase in World.Active.Systems)
             {
-                if (componentSystemBase is GameSystem)
+                if (!_systemTypes.Contains(componentSystemBase.GetType()))
                     continue;
 
                 componentSystemBase.Enabled = isEnabled;

@@ -3,7 +3,7 @@ using System.Data.SqlTypes;
 using Unity.Entities;
 using UnityEngine;
 
-namespace Data
+namespace Components
 {
     [Serializable]
     public struct HealthSharedComponent : ISharedComponentData, IEquatable<HealthSharedComponent>, INullable

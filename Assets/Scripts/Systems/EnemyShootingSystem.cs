@@ -1,4 +1,4 @@
-using Data;
+using Components;
 using Unity.Entities;
 using Unity.Transforms;
 
@@ -15,19 +15,19 @@ namespace Systems
 
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref LocalToWorld position, ref ShootingComponent shootingData, ref EnemyComponent enemyData) =>
+            Entities.ForEach((ref LocalToWorld position, ref ShootingComponent shootingComponent, ref EnemyComponent enemyComponent) =>
             {
-                var shootingPeriod = enemyData.ShootingPeriodDynamic + Time.DeltaTime;
-                if (shootingPeriod < enemyData.ShootingPeriod)
+                var shootingPeriod = enemyComponent.ShootingPeriodDynamic + Time.DeltaTime;
+                if (shootingPeriod < enemyComponent.ShootingPeriod)
                 {
-                    enemyData.ShootingPeriodDynamic = shootingPeriod;
+                    enemyComponent.ShootingPeriodDynamic = shootingPeriod;
                     return;
                 }
 
-                enemyData.ShootingPeriodDynamic = 0f;
+                enemyComponent.ShootingPeriodDynamic = 0f;
 
                 var commandBuffer = _bufferSystem.CreateCommandBuffer();
-                var entity = commandBuffer.Instantiate(shootingData.Bullet);
+                var entity = commandBuffer.Instantiate(shootingComponent.Bullet);
                 var localToWorld = new Translation
                 {
                     Value = position.Position

@@ -1,4 +1,4 @@
-using Data;
+using Components;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -20,9 +20,9 @@ namespace Systems
 
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref GameComponent gameData) =>
+            Entities.ForEach((ref GameComponent gameComponent) =>
             {
-                if (gameData.IsPaused)
+                if (gameComponent.IsPaused)
                     return;
 
                 var components = GetEntityQuery(new EntityQueryDesc
@@ -31,13 +31,13 @@ namespace Systems
                 });
 
                 var entityCounts = components.CalculateEntityCount();
-                if (entityCounts > 1 && gameData.CurrentEnemies > 1)
+                if (entityCounts > 1 && gameComponent.CurrentEnemies > 1)
                     return;
 
                 var commandBuffer = _bufferSystem.CreateCommandBuffer();
 
                 // after system restarted
-                if (entityCounts > 1 && gameData.CurrentEnemies <= 1)
+                if (entityCounts > 1 && gameComponent.CurrentEnemies <= 1)
                 {
                     var entities = components.ToEntityArray(Allocator.TempJob);
                     var isFirstEntity = true;
@@ -55,9 +55,9 @@ namespace Systems
                     entities.Dispose();
                 }
 
-                _CreateEnemies(gameData, commandBuffer);
+                _CreateEnemies(gameComponent, commandBuffer);
 
-                gameData.CurrentEnemies++;
+                gameComponent.CurrentEnemies++;
             });
         }
 
@@ -65,7 +65,7 @@ namespace Systems
         {
             for (var index = 0; index < gameComponent.CurrentEnemies; index++)
             {
-                var enemyData = new EnemyComponent
+                var enemyComponent = new EnemyComponent
                 {
                     CurrentDirection = Maths.Roll()
                         ? EnemyMovementDirection.Left
@@ -74,31 +74,31 @@ namespace Systems
 
                 if (index >= 0 && index < 2)
                 {
-                    enemyData.LineChangingTime = Random.Range(0.5f, 0.7f);
-                    enemyData.IsNonStop = false;
+                    enemyComponent.LineChangingTime = Random.Range(0.5f, 0.7f);
+                    enemyComponent.IsNonStop = false;
                 }
                 else if (index >= 2 && index < 4)
                 {
-                    enemyData.LineChangingTime = Random.Range(0.3f, 0.4f);
-                    enemyData.IsNonStop = false;
+                    enemyComponent.LineChangingTime = Random.Range(0.3f, 0.4f);
+                    enemyComponent.IsNonStop = false;
                 }
                 else if (index >= 4 && index < 6)
                 {
-                    enemyData.LineChangingTime = Random.Range(0.3f, 0.4f);
-                    enemyData.IsNonStop = true;
-                    enemyData.SerpentineDegree = Random.Range(10, 22);
+                    enemyComponent.LineChangingTime = Random.Range(0.3f, 0.4f);
+                    enemyComponent.IsNonStop = true;
+                    enemyComponent.SerpentineDegree = Random.Range(10, 22);
                 }
                 else
                 {
-                    enemyData.LineChangingTime = Random.Range(0.3f, 0.4f);
-                    enemyData.IsNonStop = true;
-                    enemyData.SerpentineDegree = Random.Range(10, 22);
+                    enemyComponent.LineChangingTime = Random.Range(0.3f, 0.4f);
+                    enemyComponent.IsNonStop = true;
+                    enemyComponent.SerpentineDegree = Random.Range(10, 22);
                 }
 
-                enemyData.ShootingPeriod = 2f;
+                enemyComponent.ShootingPeriod = 2f;
 
                 var entity = commandBuffer.Instantiate(gameComponent.Enemy);
-                commandBuffer.SetComponent(entity, enemyData);
+                commandBuffer.SetComponent(entity, enemyComponent);
 
                 _SetPosition(entity, commandBuffer);
             }

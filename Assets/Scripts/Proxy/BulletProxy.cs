@@ -1,4 +1,4 @@
-﻿using Data;
+﻿using Components;
 using Unity.Entities;
 using UnityEngine;
 
@@ -12,10 +12,10 @@ namespace Proxy
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
-            _AddBulletData(entity, dstManager);
+            _AddBulletComponent(entity, dstManager);
         }
 
-        private void _AddBulletData(Entity entity, EntityManager dstManager)
+        private void _AddBulletComponent(Entity entity, EntityManager dstManager)
         {
             var data = new BulletComponent
             {

@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Data;
+using Components;
 using Unity.Entities;
 using UnityEngine;
 

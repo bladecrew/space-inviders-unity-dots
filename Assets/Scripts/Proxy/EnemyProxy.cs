@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Data;
+using Components;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -16,34 +16,30 @@ namespace Proxy
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
-            var enemyData = new EnemyComponent();
+            dstManager.AddComponentData(entity, new EnemyComponent());
 
-            dstManager.AddComponentData(entity, enemyData);
-
-            //_AddEnemyData(entity, dstManager);
-            _AddMovementData(entity, dstManager);
-            _AddShootingData(entity, dstManager, conversionSystem);
-            _AddPositionData(entity, dstManager);
-            _AddMovementData(entity, dstManager);
+            _AddShootingComponent(entity, dstManager, conversionSystem);
+            _AddPositionComponent(entity, dstManager);
+            _AddMovementComponent(entity, dstManager);
         }
 
         public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
         {
             referencedPrefabs.Add(bulletPrefab);
         }
-        
-        private void _AddShootingData(Entity entity, EntityManager dstManager,
+
+        private void _AddShootingComponent(Entity entity, EntityManager dstManager,
             GameObjectConversionSystem conversionSystem)
         {
-            var shootingData = new ShootingComponent
+            var shootingComponent = new ShootingComponent
             {
                 Bullet = conversionSystem.GetPrimaryEntity(bulletPrefab)
             };
 
-            dstManager.AddComponentData(entity, shootingData);
+            dstManager.AddComponentData(entity, shootingComponent);
         }
 
-        private void _AddPositionData(Entity entity, EntityManager dstManager)
+        private void _AddPositionComponent(Entity entity, EntityManager dstManager)
         {
             var bounds = SceneParams.CameraViewParams();
             var enemyPosition = Vector3.zero;
@@ -55,27 +51,14 @@ namespace Proxy
             );
         }
 
-        private void _AddMovementData(Entity entity, EntityManager dstManager)
+        private void _AddMovementComponent(Entity entity, EntityManager dstManager)
         {
-            var movementData = new MovementComponent
+            var movementComponent = new MovementComponent
             {
                 MoveSpeed = moveSpeed
             };
 
-            dstManager.AddComponentData(entity, movementData);
+            dstManager.AddComponentData(entity, movementComponent);
         }
-
-        /*private void _AddEnemyData(Entity entity, EntityManager dstManager)
-        {
-            var enemyData = new EnemyData
-            {
-                CurrentDirection = movementDirection,
-                LineChangingTime = lineChangingTime,
-                IsNonStop = isNonStop,
-                SerpentineDegree = serpentineDegree
-            };
-
-            dstManager.AddComponentData(entity, enemyData);
-        }*/
     }
 }

@@ -1,12 +1,12 @@
 using System.Collections.Generic;
-using Data;
+using Components;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Rendering;
 
 namespace Systems
 {
-    public class HealthSystem : ComponentSystem
+    public class HealthRendererSystem : ComponentSystem
     {
         private EntityQuery _healthSharedQuery;
 

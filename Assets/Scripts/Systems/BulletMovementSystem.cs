@@ -1,4 +1,4 @@
-using Data;
+using Components;
 using Unity.Entities;
 using Unity.Transforms;
 
@@ -8,11 +8,11 @@ namespace Systems
     {
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref Translation translation, ref BulletComponent bulletData) =>
+            Entities.ForEach((ref Translation translation, ref BulletComponent bulletComponent) =>
             {
-                translation.Value.y += bulletData.IsEnemyBullet
-                    ? -Time.DeltaTime * bulletData.MovementSpeed
-                    : Time.DeltaTime * bulletData.MovementSpeed;
+                translation.Value.y += bulletComponent.IsEnemyBullet
+                    ? -Time.DeltaTime * bulletComponent.MovementSpeed
+                    : Time.DeltaTime * bulletComponent.MovementSpeed;
             });
         }
     }
