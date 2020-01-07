@@ -12,7 +12,7 @@ namespace Proxy
     public class EnemyProxy : MonoBehaviour, IConvertGameObjectToEntity, IDeclareReferencedPrefabs
     {
         [SerializeField] private GameObject bulletPrefab;
-        [SerializeField] private float moveSpeed;
+        [SerializeField] private GameObject explosionPrefab;
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
@@ -20,12 +20,12 @@ namespace Proxy
 
             _AddShootingComponent(entity, dstManager, conversionSystem);
             _AddPositionComponent(entity, dstManager);
-            _AddMovementComponent(entity, dstManager);
         }
 
         public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
         {
             referencedPrefabs.Add(bulletPrefab);
+            referencedPrefabs.Add(explosionPrefab);
         }
 
         private void _AddShootingComponent(Entity entity, EntityManager dstManager,
@@ -33,7 +33,8 @@ namespace Proxy
         {
             var shootingComponent = new ShootingComponent
             {
-                Bullet = conversionSystem.GetPrimaryEntity(bulletPrefab)
+                Bullet = conversionSystem.GetPrimaryEntity(bulletPrefab),
+                Explosion = conversionSystem.GetPrimaryEntity(explosionPrefab)
             };
 
             dstManager.AddComponentData(entity, shootingComponent);
@@ -49,16 +50,6 @@ namespace Proxy
             dstManager.SetComponentData(entity,
                 new LocalToWorld {Value = float4x4.TRS(enemyPosition, Quaternion.identity, 3)}
             );
-        }
-
-        private void _AddMovementComponent(Entity entity, EntityManager dstManager)
-        {
-            var movementComponent = new MovementComponent
-            {
-                MoveSpeed = moveSpeed
-            };
-
-            dstManager.AddComponentData(entity, movementComponent);
         }
     }
 }

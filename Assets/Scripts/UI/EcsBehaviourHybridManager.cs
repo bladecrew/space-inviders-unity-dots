@@ -6,6 +6,7 @@ using Sounds;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.UI;
 
 namespace UI
 {
@@ -14,9 +15,10 @@ namespace UI
         public GameObject pausedPanel;
         public GameObject deadPanel;
         public GameObject menuPanel;
+        public Text pointsText;
         public PostProcessVolume postProcessVolume;
 
-        private HashSet<Type> _systemTypes = new HashSet<Type>
+        private readonly HashSet<Type> _systemTypes = new HashSet<Type>
         {
             typeof(BulletMovementSystem),
             typeof(CollisionsSystem),
@@ -65,14 +67,14 @@ namespace UI
 
         public void GoMenu()
         {
-            _ResetData();
             _SwitchState(GameState.Menu);
+            _ResetData();
         }
 
         public void Retry()
         {
-            _ResetData();
             _SwitchState(GameState.Play);
+            _ResetData();
         }
 
         private void _SwitchState(GameState state)
@@ -81,6 +83,8 @@ namespace UI
             menuPanel.SetActive(false);
             pausedPanel.SetActive(false);
             deadPanel.SetActive(false);
+
+            pointsText.text = _entityManager.GetComponentData<GameComponent>(_gameDataEntity).Points.ToString();
 
             if (_state == GameState.Play)
             {
@@ -108,7 +112,7 @@ namespace UI
 
             var gameData = _entityManager.GetComponentData<GameComponent>(_gameDataEntity);
 
-            gameData.CurrentEnemies = 0;
+            gameData.CurrentWave = 0;
 
             _entityManager.SetComponentData(_gameDataEntity, gameData);
         }

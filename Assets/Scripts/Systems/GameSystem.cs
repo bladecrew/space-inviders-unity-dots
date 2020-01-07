@@ -22,100 +22,78 @@ namespace Systems
         {
             Entities.ForEach((ref GameComponent gameComponent) =>
             {
-                if (gameComponent.IsPaused)
-                    return;
-
                 var components = GetEntityQuery(new EntityQueryDesc
                 {
                     All = new ComponentType[] {typeof(EnemyComponent)}
                 });
 
                 var entityCounts = components.CalculateEntityCount();
-                if (entityCounts > 1 && gameComponent.CurrentEnemies > 1)
+                if (entityCounts > 0 && gameComponent.CurrentWave != 0)
                     return;
 
                 var commandBuffer = _bufferSystem.CreateCommandBuffer();
 
                 // after system restarted
-                if (entityCounts > 1 && gameComponent.CurrentEnemies <= 1)
+                if (entityCounts > 0 && gameComponent.CurrentWave == 0)
                 {
                     var entities = components.ToEntityArray(Allocator.TempJob);
-                    var isFirstEntity = true;
                     foreach (var entity in entities)
-                    {
-                        if (isFirstEntity)
-                        {
-                            isFirstEntity = false;
-                            continue;
-                        }
-
                         commandBuffer.DestroyEntity(entity);
-                    }
 
                     entities.Dispose();
                 }
 
-                _CreateEnemies(gameComponent, commandBuffer);
+                gameComponent.CurrentWave++;
 
-                gameComponent.CurrentEnemies++;
+                _CreateEnemies(gameComponent, commandBuffer);
             });
         }
 
         private static void _CreateEnemies(GameComponent gameComponent, EntityCommandBuffer commandBuffer)
         {
-            for (var index = 0; index < gameComponent.CurrentEnemies; index++)
-            {
-                var enemyComponent = new EnemyComponent
-                {
-                    CurrentDirection = Maths.Roll()
-                        ? EnemyMovementDirection.Left
-                        : EnemyMovementDirection.Right
-                };
+            var requiredCount = gameComponent.DefaultEnemies + gameComponent.CurrentWave;
+            var direction = Maths.Roll()
+                ? EnemyMovementDirection.Left
+                : EnemyMovementDirection.Right;
+            const float enemyLineChangingTime = 0.8f;
 
-                if (index >= 0 && index < 2)
-                {
-                    enemyComponent.LineChangingTime = Random.Range(0.5f, 0.7f);
-                    enemyComponent.IsNonStop = false;
-                }
-                else if (index >= 2 && index < 4)
-                {
-                    enemyComponent.LineChangingTime = Random.Range(0.3f, 0.4f);
-                    enemyComponent.IsNonStop = false;
-                }
-                else if (index >= 4 && index < 6)
-                {
-                    enemyComponent.LineChangingTime = Random.Range(0.3f, 0.4f);
-                    enemyComponent.IsNonStop = true;
-                    enemyComponent.SerpentineDegree = Random.Range(10, 22);
-                }
-                else
-                {
-                    enemyComponent.LineChangingTime = Random.Range(0.3f, 0.4f);
-                    enemyComponent.IsNonStop = true;
-                    enemyComponent.SerpentineDegree = Random.Range(10, 22);
-                }
+            if (requiredCount > gameComponent.MaxEnemies)
+                requiredCount = gameComponent.MaxEnemies;
 
-                enemyComponent.ShootingPeriod = 2f;
-
-                var entity = commandBuffer.Instantiate(gameComponent.Enemy);
-                commandBuffer.SetComponent(entity, enemyComponent);
-
-                _SetPosition(entity, commandBuffer);
-            }
-        }
-
-        private static void _SetPosition(Entity entity, EntityCommandBuffer commandBuffer)
-        {
             var bounds = SceneParams.CameraViewParams();
-            var x = Random.Range(bounds.min.x, bounds.max.x);
-            var y = bounds.max.y + 1f;
 
-            var localToWorld = new Translation
+            for (var i = 0; i < requiredCount; i++)
             {
-                Value = new float3(x, y, 0)
-            };
+                for (var j = 0; j < requiredCount - 2; j++)
+                {
+                    var enemyComponent = new EnemyComponent
+                    {
+                        CurrentDirection = direction,
+                        LineChangingTime = enemyLineChangingTime,
+                        IsNonStop = false,
+                        ShootingPeriod = 2f
+                    };
 
-            commandBuffer.SetComponent(entity, localToWorld);
+                    var entity = commandBuffer.Instantiate(gameComponent.Enemy);
+                    commandBuffer.SetComponent(entity, enemyComponent);
+
+                    var movementComponent = new MovementComponent
+                    {
+                        MoveSpeed = gameComponent.EnemiesMoveSpeed + gameComponent.CurrentWave / 2f
+                    };
+                    commandBuffer.AddComponent(entity, movementComponent);
+
+                    var x = i * 1f;
+                    var y = bounds.max.y + j * 1f;
+
+                    var localToWorld = new Translation
+                    {
+                        Value = new float3(x, y, 0)
+                    };
+
+                    commandBuffer.SetComponent(entity, localToWorld);
+                }
+            }
         }
     }
 }

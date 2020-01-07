@@ -10,6 +10,9 @@ namespace Proxy
     public class GameProxy : MonoBehaviour, IConvertGameObjectToEntity, IDeclareReferencedPrefabs
     {
         [SerializeField] private GameObject enemyGameObject;
+        [SerializeField] private int defaultEnemiesCount = 5;
+        [SerializeField] private int maxEnemiesCount = 10;
+        [SerializeField] private float enemiesMoveSpeed = 3;
 
         public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
         {
@@ -21,8 +24,11 @@ namespace Proxy
             var gameData = new GameComponent
             {
                 Enemy = conversionSystem.GetPrimaryEntity(enemyGameObject),
-                CurrentEnemies = 1,
-                State = State.Play
+                DefaultEnemies = defaultEnemiesCount,
+                MaxEnemies = maxEnemiesCount,
+                EnemiesMoveSpeed = enemiesMoveSpeed,
+                CurrentWave = 0,
+                Points = 0
             };
 
             dstManager.AddComponentData(entity, gameData);

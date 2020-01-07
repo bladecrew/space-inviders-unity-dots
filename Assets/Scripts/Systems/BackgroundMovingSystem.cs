@@ -3,38 +3,50 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
-using UnityEngine;
 
 namespace Systems
 {
     public class BackgroundMovingSystem : ComponentSystem
     {
         private EntityCommandBufferSystem _bufferSystem;
+        private EntityQuery _backgrounds;
+        private EntityQuery _backgroundComponents;
 
         protected override void OnCreate()
         {
+            var backgroundComponentsQuery = new EntityQueryDesc
+            {
+                All = new ComponentType[] {typeof(BackgroundComponent)}
+            };
+
+            _backgroundComponents = GetEntityQuery(backgroundComponentsQuery);
+
+            var query = new EntityQueryDesc
+            {
+                All = new ComponentType[] {typeof(Translation), typeof(BackgroundInstanceComponent)}
+            };
+
+            _backgrounds = GetEntityQuery(query);
+
             _bufferSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
         }
 
         protected override void OnUpdate()
         {
-            Entities.ForEach((ref BackgroundComponent backgroundComponent) =>
+            var entities = _backgrounds.ToEntityArray(Allocator.TempJob);
+            var entitiesPositions = _backgrounds.ToComponentDataArray<Translation>(Allocator.TempJob);
+            var backgroundComponents =
+                _backgroundComponents.ToComponentDataArray<BackgroundComponent>(Allocator.TempJob);
+
+            var bufferCommand = _bufferSystem.CreateCommandBuffer();
+
+            foreach (var backgroundComponent in backgroundComponents)
             {
-                var query = new EntityQueryDesc
-                {
-                    All = new ComponentType[] {typeof(Translation), typeof(BackgroundInstanceComponent)}
-                };
-
-                var backgroundInstances = GetEntityQuery(query);
-
-                var bufferCommand = _bufferSystem.CreateCommandBuffer();
-                var entities = backgroundInstances.ToEntityArray(Allocator.TempJob);
-                var entitiesPositions = backgroundInstances.ToComponentDataArray<Translation>(Allocator.TempJob);
-
                 if (entities.Length == 0)
                 {
                     bufferCommand.Instantiate(backgroundComponent.Background);
                     entities.Dispose();
+                    backgroundComponents.Dispose();
                     entitiesPositions.Dispose();
                     return;
                 }
@@ -65,10 +77,11 @@ namespace Systems
                         Value = new float3(0f, backgroundComponent.TopCorner, 0f)
                     });
                 }
+            }
 
-                entities.Dispose();
-                entitiesPositions.Dispose();
-            });
+            backgroundComponents.Dispose();
+            entities.Dispose();
+            entitiesPositions.Dispose();
         }
     }
 }

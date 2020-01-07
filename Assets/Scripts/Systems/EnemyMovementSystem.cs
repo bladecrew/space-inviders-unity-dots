@@ -1,4 +1,3 @@
-using System;
 using Components;
 using Unity.Burst;
 using Unity.Collections;
@@ -10,71 +9,123 @@ using Utils;
 
 namespace Systems
 {
-    [AlwaysSynchronizeSystem]
+    [UpdateBefore(typeof(CollisionsSystem))]
     public class EnemyMovementSystem : JobComponentSystem
     {
-        [BurstCompile]
-        private struct EnemyMovementJob : IJobForEach<Translation, MovementComponent, EnemyComponent>
+        private EntityQuery _entities;
+        private EntityCommandBufferSystem _bufferSystem;
+
+        protected override void OnCreate()
         {
-            [ReadOnly] public float DeltaTime;
-            [ReadOnly] public Bounds Bounds;    
-            
-            public void Execute(ref Translation translation, ref MovementComponent movementComponent, ref EnemyComponent enemyComponent)
+            var query = new EntityQueryDesc
             {
-                var movementDirection = _MovementDirection(ref enemyComponent, ref translation);
-                translation.Value.x += movementDirection.x * movementComponent.MoveSpeed;
-                translation.Value.y += movementDirection.y * movementComponent.MoveSpeed;
+                All = new ComponentType[] {typeof(Translation), typeof(MovementComponent), typeof(EnemyComponent)}
+            };
+
+            _entities = GetEntityQuery(query);
+            _bufferSystem = World.GetOrCreateSystem<EntityCommandBufferSystem>();
+        }
+
+        [BurstCompile]
+        private struct EnemyMovementJob : IJobParallelFor
+        {
+            [WriteOnly] public EntityCommandBuffer.Concurrent CommandBuffer;
+
+            [ReadOnly] public NativeArray<Entity> EnemyEntities;
+            [ReadOnly] public NativeArray<Translation> EnemiesTranslations;
+            [ReadOnly] public NativeArray<EnemyComponent> EnemiesComponents;
+            [ReadOnly] public NativeArray<MovementComponent> MovementComponents;
+            [ReadOnly] public float DeltaTime;
+
+            [ReadOnly] public Bounds Bounds;
+
+            public void Execute(int index)
+            {
+                _MoveEnemies(index);
             }
 
-            private Vector2 _MovementDirection(ref EnemyComponent enemyComponent, ref Translation translation)
+            private void _MoveEnemies(int index)
             {
-                var lineChangingTime = enemyComponent.LineChangingTimeDynamic + DeltaTime;
-                if (lineChangingTime >= enemyComponent.LineChangingTime)
-                {
-                    enemyComponent.LineChangingTimeDynamic = 0;
+                var firstEnemyComponent = EnemiesComponents[0];
+                var bounds = Bounds;
+                var needNormalizeLine = false;
+                var canProcessLineChanging = false;
 
-                    enemyComponent.CurrentDirection = enemyComponent.CurrentDirection == EnemyMovementDirection.Right
-                        ? EnemyMovementDirection.Left
-                        : EnemyMovementDirection.Right;
+                for (var i = 0; i < EnemiesTranslations.Length; i++)
+                {
+                    var translation = EnemiesTranslations[i];
+
+                    if (translation.Value.x < bounds.max.x && translation.Value.x > bounds.min.x)
+                        continue;
+
+                    needNormalizeLine = firstEnemyComponent.LineChangingTimeDynamic >=
+                                        firstEnemyComponent.LineChangingTime;
+
+                    canProcessLineChanging = !needNormalizeLine;
+
+                    break;
                 }
 
-                switch (enemyComponent.CurrentDirection)
+                for (var i = index; i < EnemiesTranslations.Length; i++)
                 {
-                    case EnemyMovementDirection.Right when translation.Value.x >= Bounds.max.x:
-                    case EnemyMovementDirection.Left when translation.Value.x <= Bounds.min.x:
-                        enemyComponent.LineChangingTimeDynamic = lineChangingTime;
+                    var translation = EnemiesTranslations[i];
+                    var entity = EnemyEntities[i];
+                    var enemyComponent = EnemiesComponents[i];
+                    var movementComponent = MovementComponents[i];
+                    var direction = Vector2.zero;
+                    var moveRight = enemyComponent.CurrentDirection == EnemyMovementDirection.Right;
 
-                        if (enemyComponent.IsNonStop)
-                        {
-                            enemyComponent.CurrentDirection = enemyComponent.CurrentDirection == EnemyMovementDirection.Right
-                                ? EnemyMovementDirection.Left
-                                : EnemyMovementDirection.Right;
-                        }
+                    if (needNormalizeLine)
+                    {
+                        enemyComponent.LineChangingTimeDynamic = 0;
 
-                        return new Vector2(0, -DeltaTime);
+                        enemyComponent.CurrentDirection = moveRight
+                            ? EnemyMovementDirection.Left
+                            : EnemyMovementDirection.Right;
 
-                    case EnemyMovementDirection.Left:
-                        return new Vector2(-DeltaTime, -DeltaTime)
-                            .CalculateFromDegree(enemyComponent.SerpentineDegree);
+                        moveRight = !moveRight;
+                    }
 
-                    case EnemyMovementDirection.Right:
-                        return new Vector2(DeltaTime, -DeltaTime)
-                            .CalculateFromDegree(enemyComponent.SerpentineDegree);
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    if (canProcessLineChanging)
+                        enemyComponent.LineChangingTimeDynamic += DeltaTime;
+
+                    direction.y = canProcessLineChanging ? -DeltaTime : 0;
+                    direction.x = canProcessLineChanging ? 0 : moveRight ? DeltaTime : -DeltaTime;
+                    translation.Value.x += direction.x * movementComponent.MoveSpeed;
+                    translation.Value.y += direction.y * movementComponent.MoveSpeed;
+                    CommandBuffer.SetComponent(i, entity, translation);
+                    CommandBuffer.SetComponent(i, entity, enemyComponent);
                 }
             }
         }
 
         protected override JobHandle OnUpdate(JobHandle inputDeps)
         {
+            var entities = _entities.ToEntityArray(Allocator.TempJob);
+            var translation = _entities.ToComponentDataArray<Translation>(Allocator.TempJob);
+            var enemiesComponents = _entities.ToComponentDataArray<EnemyComponent>(Allocator.TempJob);
+            var movementComponents = _entities.ToComponentDataArray<MovementComponent>(Allocator.TempJob);
+
             var movementJob = new EnemyMovementJob
             {
+                EnemyEntities = entities,
+                EnemiesTranslations = translation,
                 DeltaTime = Time.DeltaTime,
-                Bounds = SceneParams.CameraViewParams()
+                EnemiesComponents = enemiesComponents,
+                MovementComponents = movementComponents,
+                Bounds = SceneParams.CameraViewParams(),
+                CommandBuffer = _bufferSystem.CreateCommandBuffer().ToConcurrent()
             };
 
-            return movementJob.Schedule(this, inputDeps);
+            var jobHandle = movementJob.Schedule(translation.Length, 32);
+            jobHandle.Complete();
+
+            entities.Dispose();
+            translation.Dispose();
+            enemiesComponents.Dispose();
+            movementComponents.Dispose();
+
+            return jobHandle;
         }
     }
 }
