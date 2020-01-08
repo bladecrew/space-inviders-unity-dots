@@ -9,6 +9,8 @@ using Utils;
 
 namespace Systems
 {
+    [UpdateAfter(typeof(EnemyMovementSystem))]
+    [UpdateAfter(typeof(GameSystem))]
     public class CollisionsSystem : JobComponentSystem
     {
         private EntityQuery _enemiesComponents;

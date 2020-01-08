@@ -41,11 +41,6 @@ namespace Systems
 
             public void Execute(int index)
             {
-                _MoveEnemies(index);
-            }
-
-            private void _MoveEnemies(int index)
-            {
                 var firstEnemyComponent = EnemiesComponents[0];
                 var bounds = Bounds;
                 var needNormalizeLine = false;
@@ -55,7 +50,7 @@ namespace Systems
                 {
                     var translation = EnemiesTranslations[i];
 
-                    if (translation.Value.x < bounds.max.x && translation.Value.x > bounds.min.x)
+                    if (translation.Value.x > bounds.min.x && translation.Value.x < bounds.max.x)
                         continue;
 
                     needNormalizeLine = firstEnemyComponent.LineChangingTimeDynamic >=
@@ -89,10 +84,22 @@ namespace Systems
                     if (canProcessLineChanging)
                         enemyComponent.LineChangingTimeDynamic += DeltaTime;
 
-                    direction.y = canProcessLineChanging ? -DeltaTime : 0;
                     direction.x = canProcessLineChanging ? 0 : moveRight ? DeltaTime : -DeltaTime;
-                    translation.Value.x += direction.x * movementComponent.MoveSpeed;
+                    direction.y = canProcessLineChanging ? -DeltaTime : 0;
+                    
+                    if (canProcessLineChanging && (translation.Value.x < bounds.min.x || translation.Value.x > bounds.max.x))
+                    {
+                        translation.Value.x = translation.Value.x > bounds.max.x
+                            ? bounds.max.x
+                            : bounds.min.x;
+                    }
+                    else if(!canProcessLineChanging)
+                    {
+                        translation.Value.x += direction.x * movementComponent.MoveSpeed;
+                    }
+                    
                     translation.Value.y += direction.y * movementComponent.MoveSpeed;
+                    
                     CommandBuffer.SetComponent(i, entity, translation);
                     CommandBuffer.SetComponent(i, entity, enemyComponent);
                 }
