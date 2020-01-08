@@ -113,6 +113,7 @@ namespace UI
             var gameData = _entityManager.GetComponentData<GameComponent>(_gameDataEntity);
 
             gameData.CurrentWave = 0;
+            gameData.Points = 0;
 
             _entityManager.SetComponentData(_gameDataEntity, gameData);
         }
